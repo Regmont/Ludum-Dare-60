@@ -17,6 +17,11 @@ public class CameraMovement : MonoBehaviour
 
     public void Update()
     {
+        if (!GameManager.Instance.IsPlaying)
+        {
+            return;
+        }
+
         Rotate();
     }
 

@@ -36,12 +36,22 @@ public class PlayerMovement : MonoBehaviour
 
     public void Update()
     {
+        if (!GameManager.Instance.IsPlaying)
+        {
+            return;
+        }
+
         GetInput();
         UpdateStamina();
     }
 
     public void FixedUpdate()
     {
+        if (!GameManager.Instance.IsPlaying)
+        {
+            return;
+        }
+
         Move();
     }
 
