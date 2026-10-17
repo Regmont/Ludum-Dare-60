@@ -33,11 +33,6 @@ public class WaterRiser : MonoBehaviour
             return;
         }
 
-        if (!GameManager.Instance.IsPlaying)
-        {
-            return;
-        }
-
         elapsedTime += Time.deltaTime;
 
         float t = Mathf.Clamp01(elapsedTime / riseTime);

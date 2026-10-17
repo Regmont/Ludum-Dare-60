@@ -5,6 +5,7 @@ public class EntityHolder : MonoBehaviour
 {
     [SerializeField] private float holdDistance = 1f;
     [SerializeField] private float throwForce = 5f;
+    [SerializeField] private float throwUpAngle = 30f;
     [SerializeField] private Key dropKey = Key.Space;
     [SerializeField] private float holdSmoothing = 15f;
 
@@ -14,12 +15,12 @@ public class EntityHolder : MonoBehaviour
 
     private void Awake()
     {
-        cameraTransform = GetComponentInChildren<Camera>().transform;
+        cameraTransform = Camera.main.transform;
 
         GameObject holdPointObject = new GameObject("HoldPoint");
         holdPointObject.transform.SetParent(null);
-        holdPointObject.transform.position = cameraTransform.position + cameraTransform.forward * holdDistance;
-        holdPointObject.transform.rotation = cameraTransform.rotation;
+        holdPointObject.transform.position = transform.position + transform.forward * holdDistance;
+        holdPointObject.transform.rotation = transform.rotation;
         holdPoint = holdPointObject.transform;
     }
 
@@ -30,8 +31,8 @@ public class EntityHolder : MonoBehaviour
             return;
         }
 
-        Quaternion targetRotation = cameraTransform.rotation;
-        Vector3 targetPosition = cameraTransform.position + targetRotation * Vector3.forward * holdDistance;
+        Quaternion targetRotation = transform.rotation;
+        Vector3 targetPosition = transform.position + targetRotation * Vector3.forward * holdDistance;
 
         float t = 1f - Mathf.Exp(-holdSmoothing * Time.deltaTime);
 
@@ -100,7 +101,11 @@ public class EntityHolder : MonoBehaviour
         if (rb != null)
         {
             rb.isKinematic = false;
-            rb.AddForce(cameraTransform.forward * throwForce, ForceMode.Impulse);
+
+            Quaternion throwRotation = Quaternion.AngleAxis(-throwUpAngle, cameraTransform.right);
+            Vector3 throwDirection = throwRotation * cameraTransform.forward;
+
+            rb.AddForce(throwDirection * throwForce, ForceMode.Impulse);
         }
 
         Fly fly = entity.GetComponent<Fly>();

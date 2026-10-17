@@ -3,17 +3,18 @@ using UnityEngine.InputSystem;
 
 public class CameraMovement : MonoBehaviour
 {
-    private float mouseSensitivity = 10f;
+    [SerializeField] private Transform target;
+    [SerializeField] private float distance = 4f;
+    [SerializeField] private float minDistance = 1.5f;
+    [SerializeField] private float maxDistance = 8f;
+    [SerializeField] private float zoomSpeed = 0.5f;
+    [SerializeField] private float height = 1.5f;
+    [SerializeField] private float mouseSensitivity = 10f;
+    [SerializeField] private float minPitch = -30f;
+    [SerializeField] private float maxPitch = 70f;
 
     private float xRotation = 0f;
     private float yRotation = 0f;
-
-    private Transform cameraTransform;
-
-    private void Start()
-    {
-        cameraTransform = GetComponentInChildren<Camera>().transform;
-    }
 
     public void Update()
     {
@@ -23,6 +24,8 @@ public class CameraMovement : MonoBehaviour
         }
 
         Rotate();
+        Zoom();
+        Follow();
     }
 
     public void SetMouseSensitivity(float mouseSensitivity)
@@ -39,9 +42,31 @@ public class CameraMovement : MonoBehaviour
 
         xRotation += mouseX;
         yRotation -= mouseY;
-        yRotation = Mathf.Clamp(yRotation, -80f, 80f);
+        yRotation = Mathf.Clamp(yRotation, minPitch, maxPitch);
+    }
 
-        transform.localRotation = Quaternion.Euler(0f, xRotation, 0f);
-        cameraTransform.localRotation = Quaternion.Euler(yRotation, 0f, 0f);
+    private void Zoom()
+    {
+        float scroll = Mouse.current.scroll.ReadValue().y;
+
+        if (Mathf.Approximately(scroll, 0f))
+        {
+            return;
+        }
+
+        distance -= scroll * zoomSpeed;
+        distance = Mathf.Clamp(distance, minDistance, maxDistance);
+    }
+
+    private void Follow()
+    {
+        target.rotation = Quaternion.Euler(0f, xRotation, 0f);
+
+        Quaternion rotation = Quaternion.Euler(yRotation, xRotation, 0f);
+        Vector3 offset = rotation * Vector3.back * distance;
+        Vector3 targetPosition = target.position + Vector3.up * height + offset;
+
+        transform.position = targetPosition;
+        transform.rotation = rotation;
     }
 }
