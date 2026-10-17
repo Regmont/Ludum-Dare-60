@@ -8,10 +8,23 @@ public class PickMe : MonoBehaviour
 
     private EntityHolder entityHolder;
     private bool playerInRange;
+    private bool isPlaced;
+
+    public bool IsPlaced => isPlaced;
+
+    public void SetPlaced(bool value)
+    {
+        isPlaced = value;
+    }
 
     private void Update()
     {
         if (!playerInRange)
+        {
+            return;
+        }
+
+        if (isPlaced)
         {
             return;
         }
