@@ -14,6 +14,10 @@ public class EntityPlacer : MonoBehaviour
     [SerializeField] private PointSlot[] slots;
     [SerializeField] private WaterRiser waterRiser;
 
+    private bool[] occupied;
+
+    public bool[] Occupied => occupied;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -22,12 +26,14 @@ public class EntityPlacer : MonoBehaviour
             return;
         }
         Instance = this;
+
+        occupied = new bool[slots.Length];
     }
 
     public bool TryPlace(Fly fly)
     {
-        Transform target = FindSlotFor(fly.gameObject.name);
-        if (target == null)
+        int index = FindSlotIndexFor(fly.gameObject.name);
+        if (index < 0)
         {
             return false;
         }
@@ -37,8 +43,8 @@ public class EntityPlacer : MonoBehaviour
             return false;
         }
 
-        fly.transform.position = target.position;
-        fly.transform.rotation = target.rotation;
+        fly.transform.position = slots[index].point.position;
+        fly.transform.rotation = slots[index].point.rotation;
         fly.SetStatic(true);
 
         PickMe pickMe = fly.GetComponent<PickMe>();
@@ -47,18 +53,39 @@ public class EntityPlacer : MonoBehaviour
             pickMe.SetPlaced(true);
         }
 
+        occupied[index] = true;
+
         return true;
     }
 
-    private Transform FindSlotFor(string entityName)
+    public int PlacedCount()
     {
-        foreach (PointSlot slot in slots)
+        int count = 0;
+        for (int i = 0; i < occupied.Length; i++)
         {
-            if (slot.entityName == entityName)
+            if (occupied[i]) count++;
+        }
+        return count;
+    }
+
+    public bool AllPlaced()
+    {
+        for (int i = 0; i < occupied.Length; i++)
+        {
+            if (!occupied[i]) return false;
+        }
+        return true;
+    }
+
+    private int FindSlotIndexFor(string entityName)
+    {
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i].entityName == entityName)
             {
-                return slot.point;
+                return i;
             }
         }
-        return null;
+        return -1;
     }
 }

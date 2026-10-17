@@ -30,7 +30,7 @@ public class DrawnPlayer : MonoBehaviour
         if (drownTimer <= 0f)
         {
             isTimerRunning = false;
-            GameManager.Instance.EndGame();
+            GameManager.Instance.KillPlayer();
         }
     }
 }
