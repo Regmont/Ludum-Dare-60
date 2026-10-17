@@ -6,6 +6,7 @@ public class EntityHolder : MonoBehaviour
     [SerializeField] private float holdDistance = 1f;
     [SerializeField] private float throwForce = 5f;
     [SerializeField] private Key dropKey = Key.Space;
+    [SerializeField] private float holdSmoothing = 15f;
 
     private Transform holdPoint;
     private Transform cameraTransform;
@@ -13,13 +14,29 @@ public class EntityHolder : MonoBehaviour
 
     private void Awake()
     {
-        GameObject holdPointObject = new GameObject("HoldPoint");
-        holdPointObject.transform.SetParent(transform);
-        holdPointObject.transform.localPosition = new Vector3(0f, 0f, holdDistance);
-        holdPointObject.transform.localRotation = Quaternion.identity;
-        holdPoint = holdPointObject.transform;
-
         cameraTransform = GetComponentInChildren<Camera>().transform;
+
+        GameObject holdPointObject = new GameObject("HoldPoint");
+        holdPointObject.transform.SetParent(null);
+        holdPointObject.transform.position = cameraTransform.position + cameraTransform.forward * holdDistance;
+        holdPointObject.transform.rotation = cameraTransform.rotation;
+        holdPoint = holdPointObject.transform;
+    }
+
+    private void LateUpdate()
+    {
+        if (holdPoint == null)
+        {
+            return;
+        }
+
+        Quaternion targetRotation = cameraTransform.rotation;
+        Vector3 targetPosition = cameraTransform.position + targetRotation * Vector3.forward * holdDistance;
+
+        float t = 1f - Mathf.Exp(-holdSmoothing * Time.deltaTime);
+
+        holdPoint.rotation = Quaternion.Slerp(holdPoint.rotation, targetRotation, t);
+        holdPoint.position = Vector3.Lerp(holdPoint.position, targetPosition, t);
     }
 
     private void Update()
