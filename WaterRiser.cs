@@ -11,6 +11,7 @@ public class WaterRiser : MonoBehaviour
     private bool isRising;
 
     public bool IsRising => isRising;
+    public float TargetY => targetY;
     public float RemainingTime => Mathf.Max(riseTime - elapsedTime, 0f);
 
     public void StartRising()

@@ -6,23 +6,19 @@ public class Fly : MonoBehaviour
     [SerializeField] private float hoverCheckDistance = 5f;
     [SerializeField] private float rotationSpeed = 90f;
     [SerializeField] private float riseSpeed = 2f;
-    [SerializeField] private float minFallingTime = 0.1f;
-    [SerializeField] private LayerMask groundMask = ~0;
+    [SerializeField] private LayerMask groundMask;
 
     private enum State { Static, Falling, Rising, Hovering }
 
     private State state = State.Static;
     private Rigidbody rb;
-    private Collider[] colliders;
     private float targetY;
-    private float fallingTime;
 
     public bool IsStatic => state == State.Static;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        colliders = GetComponentsInChildren<Collider>();
     }
 
     public void SetStatic(bool value)
@@ -39,7 +35,6 @@ public class Fly : MonoBehaviour
         else
         {
             state = State.Falling;
-            fallingTime = 0f;
             if (rb != null)
             {
                 rb.isKinematic = false;
@@ -52,10 +47,6 @@ public class Fly : MonoBehaviour
     {
         switch (state)
         {
-            case State.Falling:
-                CheckLanding();
-                break;
-
             case State.Rising:
                 Rise();
                 break;
@@ -67,31 +58,19 @@ public class Fly : MonoBehaviour
         }
     }
 
-    private void CheckLanding()
+    private void OnCollisionEnter(Collision collision)
     {
-        if (rb == null)
+        if (state != State.Falling)
         {
             return;
         }
 
-        fallingTime += Time.deltaTime;
-
-        if (fallingTime < minFallingTime)
+        if (((1 << collision.gameObject.layer) & groundMask) == 0)
         {
             return;
         }
 
-        if (rb.linearVelocity.y <= 0.01f && IsGrounded())
-        {
-            BeginHoverSequence();
-        }
-    }
-
-    private bool IsGrounded()
-    {
-        float radius = 0.2f;
-        Vector3 origin = transform.position + Vector3.up * radius;
-        return Physics.SphereCast(origin, radius, Vector3.down, out _, hoverCheckDistance, groundMask);
+        BeginHoverSequence();
     }
 
     private void BeginHoverSequence()
@@ -113,6 +92,11 @@ public class Fly : MonoBehaviour
         rb.useGravity = false;
 
         state = State.Rising;
+
+        if (EntityPlacer.Instance != null && EntityPlacer.Instance.TryPlace(this))
+        {
+            return;
+        }
     }
 
     private void Rise()

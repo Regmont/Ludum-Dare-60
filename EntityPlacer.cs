@@ -1,8 +1,9 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class EntityPlacer : MonoBehaviour
 {
+    public static EntityPlacer Instance { get; private set; }
+
     [System.Serializable]
     public class PointSlot
     {
@@ -11,58 +12,42 @@ public class EntityPlacer : MonoBehaviour
     }
 
     [SerializeField] private PointSlot[] slots;
-    [SerializeField] private Key placeKey = Key.F;
-    [SerializeField] private string playerTag = "Player";
+    [SerializeField] private WaterRiser waterRiser;
 
-    private EntityHolder entityHolder;
-    private bool playerInRange;
-
-    private void Update()
+    private void Awake()
     {
-        if (!playerInRange)
+        if (Instance != null && Instance != this)
         {
+            Destroy(gameObject);
             return;
         }
-
-        if (!entityHolder.IsHoldingEntity())
-        {
-            return;
-        }
-
-        if (Keyboard.current[placeKey].wasPressedThisFrame)
-        {
-            PlaceEntity();
-        }
+        Instance = this;
     }
 
-    private void PlaceEntity()
+    public bool TryPlace(Fly fly)
     {
-        GameObject placed = entityHolder.PlaceEntity();
-        if (placed == null)
-        {
-            return;
-        }
-
-        Transform target = FindSlotFor(placed.name);
+        Transform target = FindSlotFor(fly.gameObject.name);
         if (target == null)
         {
-            return;
+            return false;
         }
 
-        placed.transform.position = target.position;
-        placed.transform.rotation = target.rotation;
-
-        Fly fly = placed.GetComponent<Fly>();
-        if (fly != null)
+        if (fly.transform.position.y <= waterRiser.TargetY)
         {
-            fly.SetStatic(true);
+            return false;
         }
 
-        PickMe pickMe = placed.GetComponent<PickMe>();
+        fly.transform.position = target.position;
+        fly.transform.rotation = target.rotation;
+        fly.SetStatic(true);
+
+        PickMe pickMe = fly.GetComponent<PickMe>();
         if (pickMe != null)
         {
             pickMe.SetPlaced(true);
         }
+
+        return true;
     }
 
     private Transform FindSlotFor(string entityName)
@@ -75,36 +60,5 @@ public class EntityPlacer : MonoBehaviour
             }
         }
         return null;
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!other.CompareTag(playerTag))
-        {
-            return;
-        }
-
-        EntityHolder holder = other.GetComponent<EntityHolder>();
-        if (holder == null)
-        {
-            return;
-        }
-
-        entityHolder = holder;
-        playerInRange = true;
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!other.CompareTag(playerTag))
-        {
-            return;
-        }
-
-        if (other.GetComponent<EntityHolder>() == entityHolder)
-        {
-            entityHolder = null;
-            playerInRange = false;
-        }
     }
 }

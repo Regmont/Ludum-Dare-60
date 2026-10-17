@@ -109,22 +109,4 @@ public class EntityHolder : MonoBehaviour
             fly.SetStatic(false);
         }
     }
-
-    public GameObject PlaceEntity()
-    {
-        if (!IsHoldingEntity()) return null;
-
-        GameObject entity = heldEntity;
-        heldEntity = null;
-
-        entity.transform.SetParent(null);
-
-        Fly fly = entity.GetComponent<Fly>();
-        if (fly != null)
-        {
-            fly.SetStatic(true);
-        }
-
-        return entity;
-    }
 }
