@@ -54,15 +54,8 @@ public class EntityHolder : MonoBehaviour
 
     public void PickUpEntity(GameObject entity)
     {
-        if (entity == null)
-        {
-            return;
-        }
-
-        if (IsHoldingEntity())
-        {
-            return;
-        }
+        if (entity == null) return;
+        if (IsHoldingEntity()) return;
 
         heldEntity = entity;
         heldEntity.transform.SetParent(holdPoint);
@@ -80,14 +73,17 @@ public class EntityHolder : MonoBehaviour
         {
             col.enabled = false;
         }
+
+        Fly fly = heldEntity.GetComponent<Fly>();
+        if (fly != null)
+        {
+            fly.SetStatic(true);
+        }
     }
 
     public void DropEntity()
     {
-        if (!IsHoldingEntity())
-        {
-            return;
-        }
+        if (!IsHoldingEntity()) return;
 
         GameObject entity = heldEntity;
         heldEntity = null;
@@ -106,19 +102,28 @@ public class EntityHolder : MonoBehaviour
             rb.isKinematic = false;
             rb.AddForce(cameraTransform.forward * throwForce, ForceMode.Impulse);
         }
+
+        Fly fly = entity.GetComponent<Fly>();
+        if (fly != null)
+        {
+            fly.SetStatic(false);
+        }
     }
 
     public GameObject PlaceEntity()
     {
-        if (!IsHoldingEntity())
-        {
-            return null;
-        }
+        if (!IsHoldingEntity()) return null;
 
         GameObject entity = heldEntity;
         heldEntity = null;
 
         entity.transform.SetParent(null);
+
+        Fly fly = entity.GetComponent<Fly>();
+        if (fly != null)
+        {
+            fly.SetStatic(true);
+        }
 
         return entity;
     }
