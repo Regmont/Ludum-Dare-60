@@ -14,9 +14,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float staminaRegenTime = 5f;
     [SerializeField] private float staminaRegenDelay = 1f;
 
+    [Header("Audio")]
+    private AudioSource footstepSource;
+    [SerializeField] private AudioClip footstepClip;
+    [SerializeField] private float walkStepInterval = 0.5f;
+    [SerializeField] private float runStepInterval = 0.3f;
+
     private float currentStamina;
     private float staminaRegenTimer;
     private bool isRunning;
+
+    private float footstepTimer;
 
     private Rigidbody rb;
     private Vector3 moveDirection;
@@ -32,6 +40,11 @@ public class PlayerMovement : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         currentStamina = maxStamina;
         entityHolder = GetComponent<EntityHolder>();
+
+        if (footstepSource == null)
+        {
+            footstepSource = GetComponent<AudioSource>();
+        }
     }
 
     public void Update()
@@ -43,6 +56,7 @@ public class PlayerMovement : MonoBehaviour
 
         GetInput();
         UpdateStamina();
+        UpdateFootsteps();
     }
 
     public void FixedUpdate()
@@ -105,6 +119,29 @@ public class PlayerMovement : MonoBehaviour
                 currentStamina += (maxStamina / staminaRegenTime) * Time.deltaTime;
                 currentStamina = Mathf.Min(currentStamina, maxStamina);
             }
+        }
+    }
+
+    private void UpdateFootsteps()
+    {
+        if (footstepSource == null || footstepClip == null)
+        {
+            return;
+        }
+
+        if (moveDirection == Vector3.zero)
+        {
+            footstepTimer = 0f;
+            return;
+        }
+
+        footstepTimer -= Time.deltaTime;
+
+        if (footstepTimer <= 0f)
+        {
+            footstepSource.PlayOneShot(footstepClip);
+
+            footstepTimer = isRunning ? runStepInterval : walkStepInterval;
         }
     }
 

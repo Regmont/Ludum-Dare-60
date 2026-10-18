@@ -12,6 +12,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private string startButtonName = "StartButton";
     [SerializeField] private TMP_Text timerText;
     [SerializeField] private RawImage endImage;
+    [SerializeField] private Slider musicVolumeSlider;
+    [SerializeField] private GameObject staminaBar;
 
     private CursorController cursorController;
     private WaterRiser waterRiser;
@@ -64,6 +66,16 @@ public class GameManager : MonoBehaviour
         }
 
         timerText.gameObject.SetActive(true);
+
+        if (musicVolumeSlider != null)
+        {
+            musicVolumeSlider.gameObject.SetActive(false);
+        }
+
+        if (staminaBar != null)
+        {
+            staminaBar.SetActive(true);
+        }
     }
 
     public void KillPlayer()
@@ -88,6 +100,11 @@ public class GameManager : MonoBehaviour
         cursorController.ReleaseMouse();
         timerText.gameObject.SetActive(false);
 
+        if (staminaBar != null)
+        {
+            staminaBar.SetActive(false);
+        }
+
         bool[] occupied = EntityPlacer.Instance.Occupied;
         string occupiedString = "";
         for (int i = 0; i < occupied.Length; i++)
@@ -102,11 +119,11 @@ public class GameManager : MonoBehaviour
 
     public void QuitGame()
     {
-        #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-        #else
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
                 Application.Quit();
-        #endif
+#endif
     }
 
     private void ShowEndImage(string mask)

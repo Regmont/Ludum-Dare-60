@@ -9,13 +9,19 @@ public class EntityHolder : MonoBehaviour
     [SerializeField] private Key dropKey = Key.Space;
     [SerializeField] private float holdSmoothing = 15f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip pickupClip;
+    [SerializeField] private AudioClip dropClip;
+
     private Transform holdPoint;
     private Transform cameraTransform;
     private GameObject heldEntity;
+    private AudioSource audioSource;
 
     private void Awake()
     {
         cameraTransform = Camera.main.transform;
+        audioSource = GetComponent<AudioSource>();
 
         GameObject holdPointObject = new GameObject("HoldPoint");
         holdPointObject.transform.SetParent(null);
@@ -80,6 +86,8 @@ public class EntityHolder : MonoBehaviour
         {
             fly.SetStatic(true);
         }
+
+        PlaySound(pickupClip);
     }
 
     public void DropEntity()
@@ -112,6 +120,16 @@ public class EntityHolder : MonoBehaviour
         if (fly != null)
         {
             fly.SetStatic(false);
+        }
+
+        PlaySound(dropClip);
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
         }
     }
 }
