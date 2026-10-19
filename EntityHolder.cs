@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class EntityHolder : MonoBehaviour
 {
     [SerializeField] private float holdDistance = 1f;
+    [SerializeField] private float holdHeight = 1f;
     [SerializeField] private float throwForce = 5f;
     [SerializeField] private float throwUpAngle = 30f;
     [SerializeField] private Key dropKey = Key.Space;
@@ -13,37 +14,33 @@ public class EntityHolder : MonoBehaviour
     [SerializeField] private AudioClip pickupClip;
     [SerializeField] private AudioClip dropClip;
 
-    private Transform holdPoint;
     private Transform cameraTransform;
     private GameObject heldEntity;
     private AudioSource audioSource;
+    private Vector3 currentHoldPosition;
 
     private void Awake()
     {
         cameraTransform = Camera.main.transform;
         audioSource = GetComponent<AudioSource>();
-
-        GameObject holdPointObject = new GameObject("HoldPoint");
-        holdPointObject.transform.SetParent(null);
-        holdPointObject.transform.position = transform.position + transform.forward * holdDistance;
-        holdPointObject.transform.rotation = transform.rotation;
-        holdPoint = holdPointObject.transform;
     }
 
     private void LateUpdate()
     {
-        if (holdPoint == null)
+        if (heldEntity == null)
         {
             return;
         }
 
-        Quaternion targetRotation = transform.rotation;
-        Vector3 targetPosition = transform.position + targetRotation * Vector3.forward * holdDistance;
+        Vector3 targetPosition = transform.position
+                                 + transform.forward * holdDistance
+                                 + transform.up * holdHeight;
 
         float t = 1f - Mathf.Exp(-holdSmoothing * Time.deltaTime);
+        currentHoldPosition = Vector3.Lerp(currentHoldPosition, targetPosition, t);
 
-        holdPoint.rotation = Quaternion.Slerp(holdPoint.rotation, targetRotation, t);
-        holdPoint.position = Vector3.Lerp(holdPoint.position, targetPosition, t);
+        heldEntity.transform.position = currentHoldPosition;
+        heldEntity.transform.rotation = transform.rotation;
     }
 
     private void Update()
@@ -65,9 +62,13 @@ public class EntityHolder : MonoBehaviour
         if (IsHoldingEntity()) return;
 
         heldEntity = entity;
-        heldEntity.transform.SetParent(holdPoint);
-        heldEntity.transform.localPosition = Vector3.zero;
-        heldEntity.transform.localRotation = Quaternion.identity;
+
+        currentHoldPosition = transform.position
+                              + transform.forward * holdDistance
+                              + transform.up * holdHeight;
+
+        heldEntity.transform.position = currentHoldPosition;
+        heldEntity.transform.rotation = transform.rotation;
 
         Rigidbody rb = heldEntity.GetComponent<Rigidbody>();
         if (rb != null)
@@ -96,8 +97,6 @@ public class EntityHolder : MonoBehaviour
 
         GameObject entity = heldEntity;
         heldEntity = null;
-
-        entity.transform.SetParent(null);
 
         Collider[] colliders = entity.GetComponentsInChildren<Collider>();
         foreach (Collider col in colliders)
