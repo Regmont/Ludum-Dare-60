@@ -148,7 +148,18 @@ public class PlayerMovement : MonoBehaviour
     private void Move()
     {
         float currentSpeed = isRunning ? runSpeed : speed;
-        Vector3 targetPosition = rb.position + moveDirection * currentSpeed * Time.fixedDeltaTime;
-        rb.MovePosition(targetPosition);
+        Vector3 movement = moveDirection * currentSpeed * Time.fixedDeltaTime;
+
+        if (movement == Vector3.zero) return;
+
+        RaycastHit hit;
+        if (rb.SweepTest(movement.normalized, out hit, movement.magnitude, QueryTriggerInteraction.Ignore))
+        {
+            rb.MovePosition(rb.position + movement.normalized * (hit.distance - 0.01f));
+        }
+        else
+        {
+            rb.MovePosition(rb.position + movement);
+        }
     }
 }
