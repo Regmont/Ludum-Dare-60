@@ -13,8 +13,19 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] private float minPitch = -30f;
     [SerializeField] private float maxPitch = 70f;
 
+    [Header("Collision")]
+    [SerializeField] private float cameraRadius = 0.3f;
+    [SerializeField] private float collisionSmoothSpeed = 10f;
+    [SerializeField] private LayerMask collisionMask = ~0;
+
     private float xRotation = 0f;
     private float yRotation = 0f;
+    private float currentDistance;
+
+    private void Start()
+    {
+        currentDistance = distance;
+    }
 
     public void Update()
     {
@@ -63,8 +74,21 @@ public class CameraMovement : MonoBehaviour
         target.rotation = Quaternion.Euler(0f, xRotation, 0f);
 
         Quaternion rotation = Quaternion.Euler(yRotation, xRotation, 0f);
-        Vector3 offset = rotation * Vector3.back * distance;
-        Vector3 targetPosition = target.position + Vector3.up * height + offset;
+
+        Vector3 pivotPosition = target.position + Vector3.up * height;
+        Vector3 offsetDirection = rotation * Vector3.back;
+
+        RaycastHit hit;
+        if (Physics.SphereCast(pivotPosition, cameraRadius, offsetDirection, out hit, distance, collisionMask))
+        {
+            currentDistance = Mathf.Lerp(currentDistance, Mathf.Clamp(hit.distance, minDistance, distance), Time.deltaTime * collisionSmoothSpeed);
+        }
+        else
+        {
+            currentDistance = Mathf.Lerp(currentDistance, distance, Time.deltaTime * collisionSmoothSpeed);
+        }
+
+        Vector3 targetPosition = pivotPosition + offsetDirection * currentDistance;
 
         transform.position = targetPosition;
         transform.rotation = rotation;
