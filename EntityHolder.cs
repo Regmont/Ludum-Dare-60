@@ -63,6 +63,12 @@ public class EntityHolder : MonoBehaviour
 
         heldEntity = entity;
 
+        PickMe pickMe = entity.GetComponent<PickMe>();
+        if (pickMe != null)
+        {
+            pickMe.ResetRange();
+        }
+
         currentHoldPosition = transform.position
                               + transform.forward * holdDistance
                               + transform.up * holdHeight;

@@ -17,6 +17,12 @@ public class PickMe : MonoBehaviour
         isPlaced = value;
     }
 
+    public void ResetRange()
+    {
+        playerInRange = false;
+        entityHolder = null;
+    }
+
     private void Update()
     {
         if (!playerInRange)

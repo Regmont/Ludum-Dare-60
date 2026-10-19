@@ -12,6 +12,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private string startButtonName = "StartButton";
     [SerializeField] private TMP_Text timerText;
+    [SerializeField] private RawImage startImage;
 
     [Header("End UI")]
     [SerializeField] private Image fadeScreen;
@@ -79,6 +80,8 @@ public class GameManager : MonoBehaviour
         cursorController.CatchMouse();
         state = GameState.Playing;
         waterRiser.StartRising();
+
+        startImage.gameObject.SetActive(false);
 
         GameObject startButton = GameObject.Find(startButtonName);
         if (startButton != null)

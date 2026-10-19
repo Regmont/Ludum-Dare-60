@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Animator))]
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
@@ -13,6 +14,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float staminaDrainTime = 5f;
     [SerializeField] private float staminaRegenTime = 5f;
     [SerializeField] private float staminaRegenDelay = 1f;
+
+    [Header("Animation")]
+    [SerializeField] private float runAnimationSpeedMultiplier = 1.5f;
 
     [Header("Audio")]
     private AudioSource footstepSource;
@@ -30,6 +34,9 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 moveDirection;
     private EntityHolder entityHolder;
 
+    private Animator animator;
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+
     public float CurrentStamina => currentStamina;
     public float MaxStamina => maxStamina;
     public bool IsRunning => isRunning;
@@ -40,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         currentStamina = maxStamina;
         entityHolder = GetComponent<EntityHolder>();
+        animator = GetComponent<Animator>();
 
         if (footstepSource == null)
         {
@@ -51,12 +59,15 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!GameManager.Instance.IsPlaying)
         {
+            animator.SetFloat(SpeedHash, 0f);
+            animator.speed = 1f;
             return;
         }
 
         GetInput();
         UpdateStamina();
         UpdateFootsteps();
+        UpdateAnimation();
     }
 
     public void FixedUpdate()
@@ -145,21 +156,21 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void UpdateAnimation()
+    {
+        float normalizedSpeed = moveDirection == Vector3.zero
+            ? 0f
+            : (isRunning ? 1f : speed / runSpeed);
+
+        animator.SetFloat(SpeedHash, normalizedSpeed);
+
+        animator.speed = isRunning ? runAnimationSpeedMultiplier : 1f;
+    }
+
     private void Move()
     {
         float currentSpeed = isRunning ? runSpeed : speed;
-        Vector3 movement = moveDirection * currentSpeed * Time.fixedDeltaTime;
-
-        if (movement == Vector3.zero) return;
-
-        RaycastHit hit;
-        if (rb.SweepTest(movement.normalized, out hit, movement.magnitude, QueryTriggerInteraction.Ignore))
-        {
-            rb.MovePosition(rb.position + movement.normalized * (hit.distance - 0.01f));
-        }
-        else
-        {
-            rb.MovePosition(rb.position + movement);
-        }
+        Vector3 targetPosition = rb.position + moveDirection * currentSpeed * Time.fixedDeltaTime;
+        rb.MovePosition(targetPosition);
     }
 }

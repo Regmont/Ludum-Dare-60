@@ -60,33 +60,21 @@ public class Fly : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (state != State.Falling)
-        {
-            return;
-        }
+        if (state != State.Falling) return;
 
-        if (((1 << collision.gameObject.layer) & groundMask) == 0)
-        {
-            return;
-        }
+        if (((1 << collision.gameObject.layer) & groundMask) == 0) return;
 
-        BeginHoverSequence();
+        BeginHoverSequence(collision.GetContact(0).point);
     }
 
-    private void BeginHoverSequence()
+    private void BeginHoverSequence(Vector3 contactPoint)
     {
         Vector3 velocity = rb.linearVelocity;
         velocity.x = 0f;
         velocity.z = 0f;
         rb.linearVelocity = velocity;
 
-        Vector3 origin = transform.position + Vector3.up * 0.1f;
-        if (!Physics.Raycast(origin, Vector3.down, out RaycastHit hit, hoverCheckDistance, groundMask))
-        {
-            return;
-        }
-
-        targetY = hit.point.y + hoverHeight;
+        targetY = contactPoint.y + hoverHeight;
 
         rb.isKinematic = true;
         rb.useGravity = false;
